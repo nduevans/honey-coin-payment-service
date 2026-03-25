@@ -22,7 +22,9 @@ export async function chargeBeta({ requestId, amount, phoneNumber, currency }) {
 export async function getBetaChargeStatus(providerRef) {
   try {
     const response = await axios.get(`${BASE_URL}/status/${providerRef}`);
-    // stub returns { providerRef, status: "pending" | "successful" | "failed" }
+    console.log(`[Provider Beta] getBetaChargeStatus`, {
+      response: response.data,
+    });
     return response.data;
   } catch (error) {
     throw new Error(`Provider Beta status check failed: ${error.message}`);

@@ -71,7 +71,6 @@ router.post("/", async (req, res) => {
     });
 
     const providerResult = await dispatchCharge(provider, {
-      //
       requestId,
       amount,
       phoneNumber,
