@@ -20,6 +20,11 @@ export function insertCharge({
   return findChargeByRequestId(requestId);
 }
 
+export function findAllCharges() {
+  const db = getDatabase();
+  return db.prepare(`SELECT * FROM charges ORDER BY created_at DESC`).all();
+}
+
 // Find charge by caller-supplied idempotency key which is also the requestID
 export function findChargeByRequestId(requestId) {
   const db = getDatabase();
@@ -52,11 +57,13 @@ export function updateChargeAfterDispatch(requestId, { providerRef, status }) {
 
 export function updateChargeStatusByProviderRef(providerRef, status) {
   const db = getDatabase();
+  // Guard: only update pending charges
   db.prepare(
     `
     UPDATE charges
     SET status = @status, updated_at = datetime('now')
     WHERE provider_ref = @providerRef
+      AND status NOT IN ('successful', 'failed')
   `,
   ).run({ providerRef, status });
 

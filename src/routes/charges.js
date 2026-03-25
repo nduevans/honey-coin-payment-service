@@ -1,10 +1,13 @@
 import { Router } from "express";
 import {
+  findAllCharges,
   findChargeByRequestId,
   insertCharge,
   updateChargeAfterDispatch,
 } from "../db/charges.js";
 import { dispatchCharge, VALID_PROVIDERS } from "../providers/index.js";
+import { PROVIDER_BETA } from "../providers/provider-beta.js";
+import { pollBetaChargeStatus } from "../workers/provider-beta-poller.js";
 
 const router = Router();
 
@@ -81,12 +84,31 @@ router.post("/", async (req, res) => {
       status: providerResult.status || "pending",
     });
 
+    // Beta has no webhook — kick off background polling after we've saved the providerRef
+    if (provider === PROVIDER_BETA) {
+      pollBetaChargeStatus(providerResult.providerRef).catch((err) => {
+        console.error("[BetaPoller] Unhandled error in background poll", {
+          error: err.message,
+        });
+      });
+    }
+
     return res.status(201).json(updatedCharge);
   } catch (error) {
     return res
       .status(500)
       .json({ error: error.message || "Failed to create charge" });
   }
+});
+
+router.get("/", (req, res) => {
+  return res.status(200).json(findAllCharges());
+});
+
+router.get("/:requestId", (req, res) => {
+  const charge = findChargeByRequestId(req.params.requestId);
+  if (!charge) return res.status(404).json({ error: "Charge not found" });
+  return res.status(200).json(charge);
 });
 
 export default router;

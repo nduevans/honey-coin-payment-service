@@ -7,7 +7,7 @@ cd honeycoin-providers
 cd stubs && npm install
 ```
 
-Copy the provided honeycoin-providers/stubs/.env.example to .env to set the right webhook URL
+XXXX Copy the provided honeycoin-providers/stubs/.env.example to .env to set the right webhook URL
 
 ### Step 2: Run the two providers (in different terminals)
 
@@ -32,7 +32,7 @@ npm start
 
 ## Testing
 
-#AlphaProvider
+### AlphaProvider
 
 ```bash
 curl -X POST http://localhost:3000/charge -H "Content-Type: application/json" -H "Idempotency-Key: charge-123" -d '{"amount":100,"phoneNumber":"+254700000000","currency":"KES","provider":"PROVIDER_ALPHA"}'
@@ -43,15 +43,39 @@ curl -X POST http://localhost:3000/charge -H "Content-Type: application/json" -H
 
 ```
 
+### BetaProvider
+
+```bash
+XXXX
+
+```
+
+### Indompotency Test script:
+
+```bash
+ node --test tests/**/*.test.js
+```
+
+### View Charges - Extra for visibility
+
+```bash
+# All charges
+curl http://localhost:3000/charges
+
+# Single charge
+curl http://localhost:3000/charges/your-idempotency-key
+```
+
 # Key Decisions:
 
--H "Idempotency-Key: charge-123667" - in reuest header to confirm request if this has been done before
+- -H "Idempotency-Key: charge-123667" - in reuest header to confirm request if this has been done before
 
 - providers foder with an index would help add another provider without rework -
 
-initial POST CALLto provider alpha is synchronous since the results are expected right away to update the charge with providerRef - the call back wil be async
+- Provider Alpha's actual call happens synchronously (fast HTTP round-trip to provider) - so sync
+- Alpha's 2–3 second delay before the webhook fires is on the provider side — our application does no block it and in async
 
-- Why Sqlite: ?
+- Why Sqlite: ? This persistence method survives restarts. It uses a file-backed DB and is not in-memory.This is also a simple durable local storage method.
 - Why better-sqlite3 : Faster compare to other Sqlite packages
 
 How to run locally
@@ -60,3 +84,6 @@ Your key design decisions and why (async mechanism, persistence choice, idempote
 # What you would change with more time
 
 - Charges POST request inputs validation - types and format validation could be enhanced here given more time
+- If/When Alpha stub is down when we call it, we throw a 500 but the charge will be in the DB as pending 9(default) with no providerRef. We have no retry if there is a call failure. This can be improved
+- It would have been great to be allowed to register a callback URL with either of the services via an API call instead of having to try edit the provider code/env to register the URLs
+-
