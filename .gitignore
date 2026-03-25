@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+honeycoin-providers/stubs/node_modules/
 
 # Environment — never commit real values
 .env
